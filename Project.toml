@@ -1,0 +1,26 @@
+name = "VPL"
+uuid = "b977ecfa-1b9a-418d-909d-4ebe565736ce"
+authors = ["Alejandro Morales Sierra <alejandro.moralessierra@wur.nl> and contributors"]
+version = "0.0.1"
+
+[deps]
+PlantGeomPrimitives = "7eef3cc5-4580-4ff0-8f6f-933507db6664"
+PlantGeomTurtle = "7d6e2781-1c99-4c66-97ec-106669f3e96e"
+PlantGraphs = "615ad455-9aac-4340-9247-71ef610f781a"
+PlantRayTracer = "78485975-e4aa-407d-b3bb-ded5a4265d05"
+PlantViz = "358bd95d-d12c-439f-94b7-04b17e500c7f"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+PlantGeomPrimitives = "0.0.1"
+PlantGeomTurtle = "0.0.1"
+PlantGraphs = "0.0.1"
+PlantRayTracer = "0.0.1"
+PlantViz = "0.0.1"
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
