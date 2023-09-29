@@ -32,72 +32,72 @@ lhs.
 =#
 using VPL
 module types
-    using VPL
-    struct Cell <: Node
-        state::Int64
-    end
+using VPL
+struct Cell <: Node
+    state::Int64
+end
 end
 import .types: Cell
 
 let
-function transfer(context)
-    if has_parent(context)
-        return (true, (parent(context),))
-    else
-        return (false, ())
+    function transfer(context)
+        if has_parent(context)
+            return (true, (parent(context),))
+        else
+            return (false, ())
+        end
     end
-end
-rule = Rule(
-    Cell,
-    lhs = transfer,
-    rhs = (context, father) -> Cell(data(father).state),
-    captures = true,
-)
-axiom = Cell(1) + Cell(0) + Cell(0)
-pop = Graph(axiom = axiom, rules = rule)
+    rule = Rule(
+        Cell,
+        lhs = transfer,
+        rhs = (context, father) -> Cell(data(father).state),
+        captures = true,
+    )
+    axiom = Cell(1) + Cell(0) + Cell(0)
+    pop = Graph(axiom = axiom, rules = rule)
 
-#=
-In the original state defined by the axiom, only the first node contains a state
-of 1. We can retrieve the state of each node with a query. A `Query` object is a
-like a `Rule` but without a right-hand side (i.e., its purpose is to return the
-nodes that match a particular condition). In this case, we just want to return
-all the `Cell` nodes. A `Query` object is created by passing the type of the
-node to be queried as an argument to the `Query` function. Then, to actually
-execute the query we need to use the `apply` function on the graph.
-=#
-getCell = Query(Cell)
-apply(pop, getCell)
+    #=
+    In the original state defined by the axiom, only the first node contains a state
+    of 1. We can retrieve the state of each node with a query. A `Query` object is a
+    like a `Rule` but without a right-hand side (i.e., its purpose is to return the
+    nodes that match a particular condition). In this case, we just want to return
+    all the `Cell` nodes. A `Query` object is created by passing the type of the
+    node to be queried as an argument to the `Query` function. Then, to actually
+    execute the query we need to use the `apply` function on the graph.
+    =#
+    getCell = Query(Cell)
+    apply(pop, getCell)
 
-# If we rewrite the graph one we will see that a second cell now has a state of 1.
-rewrite!(pop)
-apply(pop, getCell)
+    # If we rewrite the graph one we will see that a second cell now has a state of 1.
+    rewrite!(pop)
+    apply(pop, getCell)
 
-# And a second iteration results in all cells have a state of 1
-rewrite!(pop)
-apply(pop, getCell)
+    # And a second iteration results in all cells have a state of 1
+    rewrite!(pop)
+    apply(pop, getCell)
 
-#=
-Note that queries may not return nodes in the same order as they were created
-because of how they are internally stored (and because queries are meant to
-return collection of nodes rather than reconstruct the topology of a graph). If
-we need to process nodes in a particular order, then it is best to use a
-traversal algorithm on the graph that follows a particular order (for example
-depth-first traversal with `traverseDFS()`). This algorithm requires a function
-that applies to each node in the graph. In this simple example we can just store
-the `state` of each node in a vector (unlike Rules and Queries, this function
-takes the actual node as argument rather than a `Context` object, see the
-documentation for more details):
-=#
+    #=
+    Note that queries may not return nodes in the same order as they were created
+    because of how they are internally stored (and because queries are meant to
+    return collection of nodes rather than reconstruct the topology of a graph). If
+    we need to process nodes in a particular order, then it is best to use a
+    traversal algorithm on the graph that follows a particular order (for example
+    depth-first traversal with `traverseDFS()`). This algorithm requires a function
+    that applies to each node in the graph. In this simple example we can just store
+    the `state` of each node in a vector (unlike Rules and Queries, this function
+    takes the actual node as argument rather than a `Context` object, see the
+    documentation for more details):
+    =#
 
-pop = Graph(axiom = axiom, rules = rule)
-states = Int64[]
-traversedfs(pop, fun = node -> push!(states, node.state))
-states
+    pop = Graph(axiom = axiom, rules = rule)
+    states = Int64[]
+    traversedfs(pop, fun = node -> push!(states, node.state))
+    states
 
-# Now the states of the nodes are in the same order as they were created:
-rewrite!(pop)
-states = Int64[]
-traversedfs(pop, fun = node -> push!(states, node.state))
-states
+    # Now the states of the nodes are in the same order as they were created:
+    rewrite!(pop)
+    states = Int64[]
+    traversedfs(pop, fun = node -> push!(states, node.state))
+    states
 
 end
