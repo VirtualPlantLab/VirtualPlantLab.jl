@@ -17,10 +17,5 @@ PlantGeomTurtle = "0.0.1"
 PlantGraphs = "0.0.1"
 PlantRayTracer = "0.0.1"
 PlantViz = "0.0.1"
+Reexport = "1.2.2"
 julia = "1.9"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]
