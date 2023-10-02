@@ -13,9 +13,9 @@ green segments are shown as guides but they are not part of the snowflake):
 
 ![First four iterations fo Koch snowflake fractal](./KochWikipedia.png)
 
-In order to implement the construction process of a Koch snowflake in VPL we
+In order to implement the construction process of a Koch snowflake in VirtualPlantLab we
 need to understand how a 3D structure can be generated from a graph of nodes.
-VPL uses a procedural approach to generate of structure based on the concept of
+VirtualPlantLab uses a procedural approach to generate of structure based on the concept of
 turtle graphics.
 
 The idea behind this approach is to imagine a turtle located in space with a
@@ -26,7 +26,7 @@ node may also include instructions to move and/or rotate the turtle, which
 allows to alter the relative position of the different 3D structures described
 by a graph.
 
-The construction process of the Koch snowflake in VPL could then be represented
+The construction process of the Koch snowflake in VirtualPlantLab could then be represented
 by the following axiom and rewriting rule:
 
 axiom: E(L) + RU(120) + E(L) + RU(120) + E(L)
@@ -39,16 +39,16 @@ as follows:
 
 ![Koch construction rule](./Koch_order_1.png)
 
-Note that VPL already provides several classes for common turtle movements and
+Note that VirtualPlantLab already provides several classes for common turtle movements and
 rotations, so our implementation of the Koch snowflake only needs to define a
 class to implement the edges of the snowflake. This can be achieved as follows:
 =#
-using VPL
+using VirtualPlantLab
 import GLMakie # Import rather than "using" to avoid masking Scene
 using ColorTypes # To define colors for the rendering
 module sn
-import VPL
-struct E <: VPL.Node
+import VirtualPlantLab
+struct E <: VirtualPlantLab.Node
     length::Float64
 end
 end
@@ -59,7 +59,7 @@ let
     #Note that nodes of type E need to keep track of the length as illustrated in
     #the above. The axiom is straightforward:
     L = 1.0
-    axiom = sn.E(L) + VPL.RU(120.0) + sn.E(L) + VPL.RU(120.0) + sn.E(L)
+    axiom = sn.E(L) + VirtualPlantLab.RU(120.0) + sn.E(L) + VirtualPlantLab.RU(120.0) + sn.E(L)
 
     #The rule is also straightforward to implement as all the nodes of type E will
     #be replaced in each iteration. However, we need to ensure that the length of
@@ -85,18 +85,18 @@ let
 
     #=
     In order to be able to generate a 3D structure we need to define a method for
-    the function `VPL.feed!` (notice the need to prefix it with `VPL.` as we are
+    the function `VirtualPlantLab.feed!` (notice the need to prefix it with `VirtualPlantLab.` as we are
     going to define a method for this function). The method needs to two take two
     arguments, the first one is always an object of type Turtle and the second is an
     object of the type for which the method is defined (in this case, E).
 
     The body of the method should generate the 3D structures using the geometry
-    primitives provided by VPL and feed them to the turtle that is being passed to
+    primitives provided by VirtualPlantLab and feed them to the turtle that is being passed to
     the method as first argument. In this case, we are going to represent the edges
     of the Koch snowflakes with cylinders, which can be generated with the
-    `HollowCylinder!` function from VPL. Note that the `feed!` should return
+    `HollowCylinder!` function from VirtualPlantLab. Note that the `feed!` should return
     `nothing`, the turtle will be modified in place (hence the use of `!` at the end
-    of the function as customary in the VPL community).
+    of the function as customary in the VirtualPlantLab community).
 
     In order to render the geometry, we need assign a `color` (i.e., any type of
     color support by the package ColorTypes.jl). In this case, we just feed a basic
@@ -104,7 +104,7 @@ let
     figures more appealing, we can assign random values to each channel of the color
     to generate random colors.
     =#
-    function VPL.feed!(turtle::Turtle, e::sn.E, vars)
+    function VirtualPlantLab.feed!(turtle::Turtle, e::sn.E, vars)
         HollowCylinder!(
             turtle,
             length = e.length,

@@ -10,27 +10,27 @@ requires using the Distributions.jl package:
 The data types, rendering methods and growth rules are the same as in the binary
 tree example:
 =#
-using VPL
+using VirtualPlantLab
 using Distributions, ColorTypes
 import GLMakie
 import Base.Threads: @threads
 # Data types
 module TreeTypes
-import VPL
+import VirtualPlantLab
 # Meristem
-struct Meristem <: VPL.Node end
+struct Meristem <: VirtualPlantLab.Node end
 # Bud
-struct Bud <: VPL.Node end
+struct Bud <: VirtualPlantLab.Node end
 # Node
-struct Node <: VPL.Node end
+struct Node <: VirtualPlantLab.Node end
 # BudNode
-struct BudNode <: VPL.Node end
+struct BudNode <: VirtualPlantLab.Node end
 # Internode (needs to be mutable to allow for changes over time)
-Base.@kwdef mutable struct Internode <: VPL.Node
+Base.@kwdef mutable struct Internode <: VirtualPlantLab.Node
     length::Float64 = 0.10 # Internodes start at 10 cm
 end
 # Leaf
-Base.@kwdef struct Leaf <: VPL.Node
+Base.@kwdef struct Leaf <: VirtualPlantLab.Node
     length::Float64 = 0.20 # Leaves are 20 cm long
     width::Float64 = 0.1 # Leaves are 10 cm wide
 end
@@ -48,7 +48,7 @@ import .TreeTypes
 
 let
     # Create geometry + color for the internodes
-    function VPL.feed!(turtle::Turtle, i::TreeTypes.Internode, data)
+    function VirtualPlantLab.feed!(turtle::Turtle, i::TreeTypes.Internode, data)
         # Rotate turtle around the head to implement elliptical phyllotaxis
         rh!(turtle, data.phyllotaxis)
         HollowCylinder!(
@@ -63,7 +63,7 @@ let
     end
 
     # Create geometry + color for the leaves
-    function VPL.feed!(turtle::Turtle, l::TreeTypes.Leaf, data)
+    function VirtualPlantLab.feed!(turtle::Turtle, l::TreeTypes.Leaf, data)
         # Rotate turtle around the arm for insertion angle
         ra!(turtle, -data.leaf_angle)
         # Generate the leaf
@@ -80,7 +80,7 @@ let
     end
 
     # Insertion angle for the bud nodes
-    function VPL.feed!(turtle::Turtle, b::TreeTypes.BudNode, data)
+    function VirtualPlantLab.feed!(turtle::Turtle, b::TreeTypes.BudNode, data)
         # Rotate turtle around the arm for insertion angle
         ra!(turtle, -data.branch_angle)
     end
@@ -101,7 +101,7 @@ let
         node = parent(bud)
         # We count the number of internodes between node and the first Meristem
         # moving down the graph
-        check, steps = hasdescendant(node, condition = n -> data(n) isa TreeTypes.Meristem)
+        check, steps = has_descendant(node, condition = n -> data(n) isa TreeTypes.Meristem)
         steps = Int(ceil(steps / 2)) # Because it will count both the nodes and the internodes
         # Compute probability of bud break and determine whether it happens
         if check
@@ -282,7 +282,7 @@ let
     simplest approach is two use a special constructor `Rectangle` where one species
     a corner of the rectangle and two vectors defining the two sides of the vectors.
     Both the sides and the corner need to be specified with `Vec` just like in the
-    above when we determined the origin of each plant. VPL offers some shortcuts:
+    above when we determined the origin of each plant. VirtualPlantLab offers some shortcuts:
     `O()` returns the origin (`Vec(0.0, 0.0, 0.0)`), whereas `X`, `Y` and `Z`
     returns the corresponding axes and you can scale them by passing the desired
     length as input. Below, a rectangle is created on the XY plane with the origin
@@ -290,12 +290,12 @@ let
     =#
     soil = Rectangle(length = 21.0, width = 21.0)
     rotatey!(soil, pi / 2)
-    VPL.translate!(soil, Vec(0.0, 10.5, 0.0))
+    VirtualPlantLab.translate!(soil, Vec(0.0, 10.5, 0.0))
 
     #=
     We can now add the `soil` to the `scene` object with the `add!` function.
     =#
-    VPL.add!(scene, mesh = soil, color = RGB(1, 1, 0))
+    VirtualPlantLab.add!(scene, mesh = soil, color = RGB(1, 1, 0))
 
     #=
     We can now render the scene that combines the random forest of binary trees and

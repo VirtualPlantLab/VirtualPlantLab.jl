@@ -10,10 +10,10 @@ The model described here is based on the non-branching model of [algae
 growth](https://en.wikipedia.org/wiki/L-system#Example_1:_Algae) proposed by
 Lindermayer as one of the first L-systems.
 
-First, we need to load the VPL metapackage, which will automatically load all
-the packages in the VPL ecosystem.
+First, we need to load the VirtualPlantLab metapackage, which will automatically load all
+the packages in the VirtualPlantLab ecosystem.
 =#
-using VPL
+using VirtualPlantLab
 
 #=
 The rewriting rules of the L-system are as follows:
@@ -24,14 +24,14 @@ The rewriting rules of the L-system are as follows:
 
 **rule 2**:  B $\rightarrow$ A
 
-In VPL, this L-system would be implemented as a graph where the nodes can be of
+In VirtualPlantLab, this L-system would be implemented as a graph where the nodes can be of
 type `A` or `B` and inherit from the abstract type `Node`. It is advised to
 include type definitions in a module to avoid having to restart the Julia
 session whenever we want to redefine them. Because each module is an independent
-namespace, we need to import `Node` from the VPL package inside the module:
+namespace, we need to import `Node` from the VirtualPlantLab package inside the module:
 =#
 module algae
-import VPL: Node
+import VirtualPlantLab: Node
 struct A <: Node end
 struct B <: Node end
 end
@@ -47,7 +47,7 @@ let
     axiom = algae.A()
 
     #=
-    The rewriting rules are implemented in VPL as objects of type `Rule`. In VPL, a
+    The rewriting rules are implemented in VirtualPlantLab as objects of type `Rule`. In VirtualPlantLab, a
     rewriting rule substitutes a node in a graph with a new node or subgraph and is
     therefore composed of two parts:
 
@@ -55,7 +55,7 @@ let
        to rewrite.
     2. A subgraph that will replace each node selected by the condition above.
 
-    In VPL, the condition is split into two components:
+    In VirtualPlantLab, the condition is split into two components:
 
     1. The type of node to be selected (in this example that would be `A` or `B`).
     2. A function that is applied to each node in the graph (of the specified type)
@@ -68,7 +68,7 @@ let
     objects that inherit from `Node`. The operation `+` implies a linear
     relationship between two nodes and `[]` indicates branching.
 
-    The implementation of the two rules of algae growth model in VPL is as follows:
+    The implementation of the two rules of algae growth model in VirtualPlantLab is as follows:
     =#
     rule1 = Rule(algae.A, rhs = x -> algae.A() + algae.B())
     rule2 = Rule(algae.B, rhs = x -> algae.A())

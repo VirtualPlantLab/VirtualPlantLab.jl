@@ -1,11 +1,11 @@
-using VPL
+using VirtualPlantLab
 using Test
 using Aqua
 
 # Aqua
 @testset "Aqua" begin
-    Aqua.test_all(VPL, ambiguities = false)
-    Aqua.test_ambiguities([VPL])
+    Aqua.test_all(VirtualPlantLab, ambiguities = false)
+    Aqua.test_ambiguities([VirtualPlantLab])
 end
 
 # Tutorials

@@ -1,8 +1,8 @@
-module VPL
+module VirtualPlantLab
 
 using Reexport
 
-# Load the VPL components
+# Load the VirtualPlantLab components
 @reexport using PlantGraphs
 @reexport using PlantGeomPrimitives
 @reexport using PlantGeomTurtle

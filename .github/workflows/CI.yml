@@ -35,7 +35,7 @@ jobs:
         id: referencetests
         continue-on-error: true
         run: >
-          DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --color=yes -e 'using Pkg; Pkg.test("VPL", coverage=true)'
+          DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --color=yes -e 'using Pkg; Pkg.test("VirtualPlantLab", coverage=true)'
           && echo "TESTS_SUCCESSFUL=true" >> $GITHUB_ENV
         env:
           CI: true

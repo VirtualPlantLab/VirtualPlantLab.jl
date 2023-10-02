@@ -8,7 +8,7 @@ radiation use efficiency to compute the daily growth rate.
 
 The following packages are needed:
 =#
-using VPL, ColorTypes
+using VirtualPlantLab, ColorTypes
 import GLMakie
 using Base.Threads: @threads
 import Random
@@ -29,20 +29,20 @@ Lambertian surfaces).
 =#
 # Data types
 module TreeTypes
-using VPL
+using VirtualPlantLab
 using Distributions
 # Meristem
-Base.@kwdef mutable struct Meristem <: VPL.Node
+Base.@kwdef mutable struct Meristem <: VirtualPlantLab.Node
     age::Int64 = 0   # Age of the meristem
 end
 # Bud
-struct Bud <: VPL.Node end
+struct Bud <: VirtualPlantLab.Node end
 # Node
-struct Node <: VPL.Node end
+struct Node <: VirtualPlantLab.Node end
 # BudNode
-struct BudNode <: VPL.Node end
+struct BudNode <: VirtualPlantLab.Node end
 # Internode (needs to be mutable to allow for changes over time)
-Base.@kwdef mutable struct Internode <: VPL.Node
+Base.@kwdef mutable struct Internode <: VirtualPlantLab.Node
     age::Int64 = 0         # Age of the internode
     biomass::Float64 = 0.0 # Initial biomass
     length::Float64 = 0.0  # Internodes
@@ -51,7 +51,7 @@ Base.@kwdef mutable struct Internode <: VPL.Node
     material::Lambertian{1} = Lambertian(τ = 0.1, ρ = 0.05) # Leaf material
 end
 # Leaf
-Base.@kwdef mutable struct Leaf <: VPL.Node
+Base.@kwdef mutable struct Leaf <: VirtualPlantLab.Node
     age::Int64 = 0         # Age of the leaf
     biomass::Float64 = 0.0 # Initial biomass
     length::Float64 = 0.0  # Leaves
@@ -91,7 +91,7 @@ let
     the previous example but include the materials for the ray tracer.
     =#
     # Create geometry + color for the internodes
-    function VPL.feed!(turtle::Turtle, i::TreeTypes.Internode, data)
+    function VirtualPlantLab.feed!(turtle::Turtle, i::TreeTypes.Internode, data)
         # Rotate turtle around the head to implement elliptical phyllotaxis
         rh!(turtle, data.phyllotaxis)
         HollowCylinder!(
@@ -107,7 +107,7 @@ let
     end
 
     # Create geometry + color for the leaves
-    function VPL.feed!(turtle::Turtle, l::TreeTypes.Leaf, data)
+    function VirtualPlantLab.feed!(turtle::Turtle, l::TreeTypes.Leaf, data)
         # Rotate turtle around the arm for insertion angle
         ra!(turtle, -data.leaf_angle)
         # Generate the leaf
@@ -125,7 +125,7 @@ let
     end
 
     # Insertion angle for the bud nodes
-    function VPL.feed!(turtle::Turtle, b::TreeTypes.BudNode, data)
+    function VirtualPlantLab.feed!(turtle::Turtle, b::TreeTypes.BudNode, data)
         # Rotate turtle around the arm for insertion angle
         ra!(turtle, -data.branch_angle)
     end
@@ -229,7 +229,7 @@ let
     function create_soil()
         soil = Rectangle(length = 21.0, width = 21.0)
         rotatey!(soil, π / 2) # To put it in the XY plane
-        VPL.translate!(soil, Vec(0.0, 10.5, 0.0)) # Corner at (0,0,0)
+        VirtualPlantLab.translate!(soil, Vec(0.0, 10.5, 0.0)) # Corner at (0,0,0)
         return soil
     end
     function create_scene(forest)
@@ -558,11 +558,11 @@ let
     using a dedicated graph and generate a `Scene` object which can later be
     merged with the rest of scene generated in daily step:
     =#
-    Base.@kwdef struct Soil <: VPL.Node
+    Base.@kwdef struct Soil <: VirtualPlantLab.Node
         length::Float64
         width::Float64
     end
-    function VPL.feed!(turtle::Turtle, s::Soil, data)
+    function VirtualPlantLab.feed!(turtle::Turtle, s::Soil, data)
         Rectangle!(
             turtle,
             length = s.length,
