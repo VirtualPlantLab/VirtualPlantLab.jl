@@ -13,9 +13,9 @@ does not need to be aware of the other packages, except in cases where methods n
 define for user-defined types (currently that is the case for `PlantGeomTurtle.feed!()`
 which is required to generate geometry from user-defined types).
 
-# 1. Instalation
+# 1. Installation
 
-You can install the latest stable version of PlantGraphs.jl with the Julia package manager:
+You can install the latest stable version of VirtualPlantLab.jl with the Julia package manager:
 
 ```julia
 ] add VirtualPlantLab
