@@ -1,7 +1,7 @@
 name = "VirtualPlantLab"
 uuid = "b977ecfa-1b9a-418d-909d-4ebe565736ce"
 authors = ["Alejandro Morales Sierra <alejandro.moralessierra@wur.nl> and contributors"]
-version = "0.0.2"
+version = "0.0.3"
 
 [deps]
 PlantGeomPrimitives = "7eef3cc5-4580-4ff0-8f6f-933507db6664"
