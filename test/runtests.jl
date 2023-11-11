@@ -11,27 +11,43 @@ end
 # Tutorials
 @testset "Tutorials" begin
     @testset "Algae" begin
-        include("algae.jl")
+        let
+            include("algae.jl")
+        end
     end
     @testset "Snowflakes" begin
-        include("snowflakes.jl")
+        let
+            include("snowflakes.jl")
+        end
     end
     @testset "Tree" begin
-        include("tree.jl")
+        let
+            include("tree.jl")
+        end
     end
     @testset "Forest" begin
-        include("forest.jl")
+        let
+            include("forest.jl")
+        end
     end
     @testset "Growth forest" begin
-        include("growthforest.jl")
+        let
+            include("growthforest.jl")
+        end
     end
     @testset "Raytraced forest" begin
-        include("raytracedforest.jl")
+        let
+            include("raytracedforest.jl")
+        end
     end
     @testset "Context" begin
-        include("context.jl")
+        let
+            include("context.jl")
+        end
     end
     @testset "Relational queries" begin
-        include("relationalqueries.jl")
+        let
+            include("relationalqueries.jl")
+        end
     end
 end
