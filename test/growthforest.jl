@@ -458,4 +458,3 @@ And compute the leaf area index:
 
 =#
 get_LAI(forest)
-#=
