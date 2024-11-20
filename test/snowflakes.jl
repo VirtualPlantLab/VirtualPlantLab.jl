@@ -113,7 +113,7 @@ to generate random colors.
 function VirtualPlantLab.feed!(turtle::Turtle, e::sn.E, vars)
     HollowCylinder!(turtle, length = e.length, width = e.length/10,
                     height = e.length/10, move = true,
-                    color = RGB(rand(), rand(), rand()))
+                    colors = RGB(rand(), rand(), rand()))
     return nothing
 end
 #=

@@ -69,7 +69,7 @@ function VirtualPlantLab.feed!(turtle::Turtle, i::TreeTypes.Internode, vars)
     ## Rotate turtle around the head to implement elliptical phyllotaxis
     rh!(turtle, vars.phyllotaxis)
     HollowCylinder!(turtle, length = i.length, height = i.length/15, width = i.length/15,
-                move = true, color = RGB(0.5,0.4,0.0))
+                move = true, colors = RGB(0.5,0.4,0.0))
     return nothing
 end
 
@@ -79,7 +79,7 @@ function VirtualPlantLab.feed!(turtle::Turtle, l::TreeTypes.Leaf, vars)
     ra!(turtle, -vars.leaf_angle)
     ## Generate the leaf
     Ellipse!(turtle, length = l.length, width = l.width, move = false,
-             color = RGB(0.2,0.6,0.2))
+             colors = RGB(0.2,0.6,0.2))
     ## Rotate turtle back to original direction
     ra!(turtle, vars.leaf_angle)
     return nothing

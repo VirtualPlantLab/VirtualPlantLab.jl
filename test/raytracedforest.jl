@@ -1,10 +1,19 @@
 #=
+
 # Ray-traced forest
 
-Alejandro Morales
+Alejandro Morales & Ana Ernst
 
 Centre for Crop Systems Analysis - Wageningen University
 
+> ## TL;DR
+> Now we want to forest growth model that PAR interception and introduces user to the ray-tracer.
+> - Include material as a property for each object
+> - Create sky for specific conditions and locations using SkyDomes
+> - Layer different types of radiation in sky domes (e.g., direct and diffuse)
+> - Combine graph and sky with a ray-tracer
+> - Compute growth and biomass production according to PAR interception and RUE
+>
 
 In this example we extend the forest growth model to include PAR interception a
 radiation use efficiency to compute the daily growth rate.
@@ -33,21 +42,21 @@ Leaves have optical properties needed for ray tracing (they are defined as
 Lambertian surfaces).
 
 =#
-## Data types
+# Data types
 module TreeTypes
     using VirtualPlantLab
     using Distributions
-    ## Meristem
+    # Meristem
     Base.@kwdef mutable struct Meristem <: VirtualPlantLab.Node
-        age::Int64 = 0   ## Age of the meristem
+        age::Int64 = 0   # Age of the meristem
     end
-    ## Bud
+    # Bud
     struct Bud <: VirtualPlantLab.Node end
-    ## Node
+    # Node
     struct Node <: VirtualPlantLab.Node end
-    ## BudNode
+    # BudNode
     struct BudNode <: VirtualPlantLab.Node end
-    ## Internode (needs to be mutable to allow for changes over time)
+    # Internode (needs to be mutable to allow for changes over time)
     Base.@kwdef mutable struct Internode <: VirtualPlantLab.Node
         age::Int64 = 0         ## Age of the internode
         biomass::Float64 = 0.0 ## Initial biomass
@@ -56,7 +65,7 @@ module TreeTypes
         sink::Exponential{Float64} = Exponential(5)
         material::Lambertian{1} = Lambertian(τ = 0.1, ρ = 0.05) ## Leaf material
     end
-    ## Leaf
+    # Leaf
     Base.@kwdef mutable struct Leaf <: VirtualPlantLab.Node
         age::Int64 = 0         ## Age of the leaf
         biomass::Float64 = 0.0 ## Initial biomass
@@ -65,12 +74,12 @@ module TreeTypes
         sink::Beta{Float64} = Beta(2,5)
         material::Lambertian{1} = Lambertian(τ = 0.1, ρ = 0.05) ## Leaf material
     end
-    ## Graph-level variables -> mutable because we need to modify them during growth
+    # Graph-level variables -> mutable because we need to modify them during growth
     Base.@kwdef mutable struct treeparams
-        ## Variables
+        # Variables
         PAR::Float64 = 0.0   ## Total PAR absorbed by the leaves on the tree (MJ)
         biomass::Float64 = 2e-3 ## Current total biomass (g)
-        ## Parameters
+        # Parameters
         RUE::Float64 = 5.0   ## Radiation use efficiency (g/MJ) -> unrealistic to speed up sim
         IB0::Float64 = 1e-3  ## Initial biomass of an internode (g)
         SIW::Float64 = 0.1e6 ## Specific internode weight (g/m3)
@@ -94,32 +103,32 @@ import .TreeTypes
 
 The methods for creating the geometry and color of the tree are the same as in
 the previous example but include the materials for the ray tracer.
+Create geometry + color for the internodes
 
 =#
-## Create geometry + color for the internodes
 function VirtualPlantLab.feed!(turtle::Turtle, i::TreeTypes.Internode, data)
-    ## Rotate turtle around the head to implement elliptical phyllotaxis
+    # Rotate turtle around the head to implement elliptical phyllotaxis
     rh!(turtle, data.phyllotaxis)
     HollowCylinder!(turtle, length = i.length, height = i.width, width = i.width,
-                move = true, color = RGB(0.5,0.4,0.0), material = i.material)
+                move = true, colors = RGB(0.5,0.4,0.0), materials = i.material)
     return nothing
 end
 
-## Create geometry + color for the leaves
+# Create geometry + color for the leaves
 function VirtualPlantLab.feed!(turtle::Turtle, l::TreeTypes.Leaf, data)
-    ## Rotate turtle around the arm for insertion angle
+    # Rotate turtle around the arm for insertion angle
     ra!(turtle, -data.leaf_angle)
-    ## Generate the leaf
+    # Generate the leaf
     Ellipse!(turtle, length = l.length, width = l.width, move = false,
-             color = RGB(0.2,0.6,0.2), material = l.material)
-    ## Rotate turtle back to original direction
+             colors = RGB(0.2,0.6,0.2), materials = l.material)
+    # Rotate turtle back to original direction
     ra!(turtle, data.leaf_angle)
     return nothing
 end
 
-## Insertion angle for the bud nodes
+# Insertion angle for the bud nodes
 function VirtualPlantLab.feed!(turtle::Turtle, b::TreeTypes.BudNode, data)
-    ## Rotate turtle around the arm for insertion angle
+    # Rotate turtle around the arm for insertion angle
     ra!(turtle, -data.branch_angle)
 end
 #=
@@ -128,10 +137,10 @@ end
 
 The meristem rule is now parameterized by the initial states of the leaves and
 internodes and will only be triggered every X days where X is the plastochron.
+Create right side of the growth rule (parameterized by the initial states
+of the leaves and internodes)
 
 =#
-## Create right side of the growth rule (parameterized by the initial states
-## of the leaves and internodes)
 function create_meristem_rule(vleaf, vint)
     meristem_rule = Rule(TreeTypes.Meristem,
                         lhs = mer -> mod(data(mer).age, graph_data(mer).plastochron) == 0,
@@ -150,24 +159,24 @@ end
 The bud break probability is now a function of distance to the apical meristem
 rather than the number of internodes. An adhoc traversal is used to compute this
 length of the main branch a bud belongs to (ignoring the lateral branches).
+Compute the probability that a bud breaks as function of distance to the meristem
 
 =#
-# Compute the probability that a bud breaks as function of distance to the meristem
 function prob_break(bud)
-    ## We move to parent node in the branch where the bud was created
+    # We move to parent node in the branch where the bud was created
     node =  parent(bud)
-    ## Extract the first internode
+    # Extract the first internode
     child = filter(x -> data(x) isa TreeTypes.Internode, children(node))[1]
     data_child = data(child)
-    ## We measure the length of the branch until we find the meristem
+    # We measure the length of the branch until we find the meristem
     distance = 0.0
     while !isa(data_child, TreeTypes.Meristem)
-        ## If we encounter an internode, store the length and move to the next node
+        # If we encounter an internode, store the length and move to the next node
         if data_child isa TreeTypes.Internode
             distance += data_child.length
             child = children(child)[1]
             data_child = data(child)
-        ## If we encounter a node, extract the next internode
+        # If we encounter a node, extract the next internode
         elseif data_child isa TreeTypes.Node
                 child = filter(x -> data(x) isa TreeTypes.Internode, children(child))[1]
                 data_child = data(child)
@@ -175,13 +184,13 @@ function prob_break(bud)
             error("Should be Internode, Node or Meristem")
         end
     end
-    ## Compute the probability of bud break as function of distance and
-    ## make stochastic decision
+    # Compute the probability of bud break as function of distance and
+    # make stochastic decision
     prob =  min(1.0, distance*graph_data(bud).budbreak)
     return rand() < prob
 end
 
-## Branch rule parameterized by initial states of internodes
+# Branch rule parameterized by initial states of internodes
 function create_branch_rule(vint)
     branch_rule = Rule(TreeTypes.Bud,
             lhs = prob_break,
@@ -215,13 +224,13 @@ function create_soil()
     return soil
 end
 function create_scene(forest)
-    ## These are the trees
+    # These are the trees
     scene = Scene(vec(forest))
-    ## Add a soil surface
+    # Add a soil surface
     soil = create_soil()
     soil_material = Lambertian(τ = 0.0, ρ = 0.21)
-    add!(scene, mesh = soil, material = soil_material)
-    ## Return the scene
+    add!(scene, mesh = soil, materials = soil_material)
+    # Return the scene
     return scene
 end
 #=
@@ -239,31 +248,31 @@ the light sources adequately).
 
 =#
 function create_sky(;scene, lat = 52.0*π/180.0, DOY = 182)
-    ## Fraction of the day and day length
+    # Fraction of the day and day length
     fs = collect(0.1:0.1:0.9)
     dec = declination(DOY)
     DL = day_length(lat, dec)*3600
-    ## Compute solar irradiance
+    # Compute solar irradiance
     temp = [clear_sky(lat = lat, DOY = DOY, f = f) for f in fs] # W/m2
     Ig   = getindex.(temp, 1)
     Idir = getindex.(temp, 2)
     Idif = getindex.(temp, 3)
-    ## Conversion factors to PAR for direct and diffuse irradiance
+    # Conversion factors to PAR for direct and diffuse irradiance
     f_dir = waveband_conversion(Itype = :direct,  waveband = :PAR, mode = :power)
     f_dif = waveband_conversion(Itype = :diffuse, waveband = :PAR, mode = :power)
-    ## Actual irradiance per waveband
+    # Actual irradiance per waveband
     Idir_PAR = f_dir.*Idir
     Idif_PAR = f_dif.*Idif
-    ## Create the dome of diffuse light
+    # Create the dome of diffuse light
     dome = sky(scene,
                   Idir = 0.0, ## No direct solar radiation
                   Idif = sum(Idir_PAR)/10*DL, ## Daily Diffuse solar radiation
                   nrays_dif = 1_000_000, ## Total number of rays for diffuse solar radiation
                   sky_model = StandardSky, ## Angular distribution of solar radiation
-                  dome_method = equal_solid_angles, ## Discretization of the sky dome
+                  dome_method = equal_solid_angles, # Discretization of the sky dome
                   ntheta = 9, ## Number of discretization steps in the zenith angle
                   nphi = 12) ## Number of discretization steps in the azimuth angle
-    ## Add direct sources for different times of the day
+    # Add direct sources for different times of the day
     for I in Idir_PAR
         push!(dome, sky(scene, Idir = I/10*DL, nrays_dir = 100_000, Idif = 0.0)[1])
     end
@@ -317,16 +326,15 @@ the different internodes (using `power()` on the `Material` object). Note that
 the `power()` function returns three different values, one for each waveband,
 but they are added together as RUE is defined for total PAR.
 
-
 =#
 # Run the ray tracer, calculate PAR absorbed per tree and add it to the daily
 # total using general weighted quadrature formula
 function calculate_PAR!(forest;  DOY = 182)
-    ## Reset PAR absorbed by the tree (at the start of a new day)
+    # Reset PAR absorbed by the tree (at the start of a new day)
     reset_PAR!(forest)
-    ## Run the ray tracer to compute daily PAR absorption
+    # Run the ray tracer to compute daily PAR absorption
     run_raytracer!(forest, DOY = DOY)
-    ## Add up PAR absorbed by each leaf within each tree
+    # Add up PAR absorbed by each leaf within each tree
     @threads for tree in forest
         for l in get_leaves(tree)
             data(tree).PAR += power(l.material)[1]
@@ -383,11 +391,9 @@ sink_strength(leaf, vars) = leaf.age > vars.leaf_expansion ? 0.0 :
                             pdf(leaf.sink, leaf.age/vars.leaf_expansion)/100.0
 plot(0:1:50, x -> sink_strength(TreeTypes.Leaf(age = x), TreeTypes.treeparams()),
      xlabel = "Age", ylabel = "Sink strength", label = "Leaf")
-#=
 
-=#
 sink_strength(int) = pdf(int.sink, int.age)
-plot!(0:1:50, x -> sink_strength(TreeTypes.Internode(age = x)), label = "Internode")
+plot!(0:1:50, x -> sink_strength(TreeTypes.Leaf(age = x)), label = "Internode")
 #=
 
 Now we need a function that updates the biomass of the tree, allocates it to the
@@ -422,11 +428,11 @@ strength.
 
 =#
 function grow!(tree, all_leaves, all_internodes)
-    ## Compute total biomass increment
+    # Compute total biomass increment
     tdata = data(tree)
-    ΔB    = max(0.5, tdata.RUE*tdata.PAR/1e6) # Trick to emulate reserves in seedling
+    ΔB    = max(0.5, tdata.RUE*tdata.PAR/1e6) ## Trick to emulate reserves in seedling
     tdata.biomass += ΔB
-    ## Total sink strength
+    # Total sink strength
     total_sink = 0.0
     for leaf in all_leaves
         total_sink += sink_strength(leaf, tdata)
@@ -434,7 +440,7 @@ function grow!(tree, all_leaves, all_internodes)
     for int in all_internodes
         total_sink += sink_strength(int)
     end
-    ## Allocate biomass to leaves and internodes
+    # Allocate biomass to leaves and internodes
     for leaf in all_leaves
         leaf.biomass += ΔB*sink_strength(leaf, tdata)/total_sink
     end
@@ -471,22 +477,22 @@ parallel.
 =#
 get_meristems(tree) = apply(tree, Query(TreeTypes.Meristem))
 function daily_step!(forest, DOY)
-    ## Compute PAR absorbed by each tree
+    # Compute PAR absorbed by each tree
     calculate_PAR!(forest, DOY = DOY)
-    ## Grow the trees
+    # Grow the trees
     @threads for tree in forest
-        ## Retrieve all the relevant organs
+        # Retrieve all the relevant organs
         all_leaves = get_leaves(tree)
         all_internodes = get_internodes(tree)
         all_meristems = get_meristems(tree)
-        ## Update the age of the organs
+        # Update the age of the organs
         age!(all_leaves, all_internodes, all_meristems)
-        ## Grow the tree
+        # Grow the tree
         grow!(tree, all_leaves, all_internodes)
         tdata = data(tree)
         size_leaves!(all_leaves, tdata)
         size_internodes!(all_internodes, tdata)
-        ## Developmental rules
+        # Developmental rules
         rewrite!(tree)
     end
 end
@@ -500,30 +506,27 @@ orientation and RUE:
 =#
 RUEs = rand(Normal(1.5,0.2), 10, 10)
 histogram(vec(RUEs))
-#=
 
-=#
 orientations = [rand()*360.0 for i = 1:2.0:20.0, j = 1:2.0:20.0]
 histogram(vec(orientations))
-#=
 
-=#
 origins = [Vec(i,j,0) for i = 1:2.0:20.0, j = 1:2.0:20.0];
+nothing #hide
 #=
 
 The following initalizes a tree based on the origin, orientation and RUE:
 
 =#
 function create_tree(origin, orientation, RUE)
-    ## Initial state and parameters of the tree
+    # Initial state and parameters of the tree
     data = TreeTypes.treeparams(RUE = RUE)
-    ## Initial states of the leaves
+    # Initial states of the leaves
     leaf_length, leaf_width = leaf_dims(data.LB0, data)
     vleaf = (biomass = data.LB0, length = leaf_length, width = leaf_width)
-    ## Initial states of the internodes
+    # Initial states of the internodes
     int_length, int_width = int_dims(data.LB0, data)
     vint = (biomass = data.IB0, length = int_length, width = int_width)
-    ## Growth rules
+    # Growth rules
     meristem_rule = create_meristem_rule(vleaf, vint)
     branch_rule   = create_branch_rule(vint)
     axiom = T(origin) + RH(orientation) +
@@ -536,7 +539,6 @@ function create_tree(origin, orientation, RUE)
     return tree
 end
 #=
-
 
 ## Visualization
 
@@ -551,7 +553,7 @@ Base.@kwdef struct Soil <: VirtualPlantLab.Node
     width::Float64
 end
 function VirtualPlantLab.feed!(turtle::Turtle, s::Soil, data)
-    Rectangle!(turtle, length = s.length, width = s.width, color = RGB(255/255, 236/255, 179/255))
+    Rectangle!(turtle, length = s.length, width = s.width, colors = RGB(255/255, 236/255, 179/255))
 end
 soil_graph = RA(-90.0) + T(Vec(0.0, 10.0, 0.0)) + ## Moves into position
              Soil(length = 20.0, width = 20.0) ## Draws the soil tile
@@ -567,7 +569,7 @@ or a function):
 function render_forest(forest, soil)
     scene = Scene(vec(forest)) ## create scene from forest
     scene = Scene([scene, soil]) ## merges the two scenes
-    display(render(scene))
+    render(scene)
 end
 #=
 

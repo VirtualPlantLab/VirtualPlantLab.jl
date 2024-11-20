@@ -52,7 +52,7 @@ function VirtualPlantLab.feed!(turtle::Turtle, i::TreeTypes.Internode, data)
     ## Rotate turtle around the head to implement elliptical phyllotaxis
     rh!(turtle, data.phyllotaxis)
     HollowCylinder!(turtle, length = i.length, height = i.length/15, width = i.length/15,
-                move = true, color = RGB(0.5,0.4,0.0))
+                move = true, colors = RGB(0.5,0.4,0.0))
     return nothing
 end
 
@@ -62,7 +62,7 @@ function VirtualPlantLab.feed!(turtle::Turtle, l::TreeTypes.Leaf, data)
     ra!(turtle, -data.leaf_angle)
     ## Generate the leaf
     Ellipse!(turtle, length = l.length, width = l.width, move = false,
-             color = RGB(0.2,0.6,0.2))
+             colors = RGB(0.2,0.6,0.2))
     ## Rotate turtle back to original direction
     ra!(turtle, data.leaf_angle)
     return nothing
@@ -233,7 +233,7 @@ newforest = deepcopy(forest)
 @threads for i in eachindex(forest)
     newforest[i] = simulate(forest[i], getInternode, 6)
 end
-render(Scene(newforest), parallel = true)
+render(Scene(newforest, parallel = true))
 #=
 
 An alternative way to perform the simulation is to have an outer loop for each timestep and an internal loop over the different trees. Although this approach is not required for this simple model, most FSP models will probably need such a scheme as growth of each individual plant will depend on competition for resources with neighbouring plants. In this case, this approach would look as follows:
@@ -245,7 +245,7 @@ for step in 1:15
         newforest[i] = simulate(newforest[i], getInternode, 1)
     end
 end
-render(Scene(newforest), parallel = true)
+render(Scene(newforest, parallel = true))
 #=
 
 # Customizing the scene
@@ -276,7 +276,7 @@ VirtualPlantLab.translate!(soil, Vec(0.0, 10.5, 0.0))
 We can now add the `soil` to the `scene` object with the `add!` function.
 
 =#
-VirtualPlantLab.add!(scene, mesh = soil, color = RGB(1,1,0))
+VirtualPlantLab.add!(scene, mesh = soil, colors = RGB(1,1,0))
 #=
 
 We can now render the scene that combines the random forest of binary trees and a yellow soil. Notice that
@@ -297,5 +297,5 @@ compute the resolution from a physical width and height in cm and a dpi (e.g., u
 
 =#
 res = calculate_resolution(width = 16.0, height = 16.0, dpi = 1_000)
-output = render(scene, axes = false, resolution = res)
+output = render(scene, axes = false, size = res)
 export_scene(scene = output, filename = "nice_trees.png")
