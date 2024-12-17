@@ -207,7 +207,7 @@ And we can render the forest with the function `render` as in the binary tree
 example but passing the whole forest at once
 
 =#
-render(Scene(newforest))
+render(Mesh(newforest))
 #=
 
 If we iterate 4 more iterations we will start seeing the different individuals
@@ -215,7 +215,7 @@ diverging in size due to the differences in growth rates
 
 =#
 newforest = [simulate(tree, getInternode, 15) for tree in newforest];
-render(Scene(newforest))
+render(Mesh(newforest))
 #=
 
 ## Multithreaded simulation
@@ -233,7 +233,7 @@ newforest = deepcopy(forest)
 @threads for i in eachindex(forest)
     newforest[i] = simulate(forest[i], getInternode, 6)
 end
-render(Scene(newforest, parallel = true))
+render(Mesh(newforest, parallel = true))
 #=
 
 An alternative way to perform the simulation is to have an outer loop for each timestep and an internal loop over the different trees. Although this approach is not required for this simple model, most FSP models will probably need such a scheme as growth of each individual plant will depend on competition for resources with neighbouring plants. In this case, this approach would look as follows:
@@ -245,18 +245,18 @@ for step in 1:15
         newforest[i] = simulate(newforest[i], getInternode, 1)
     end
 end
-render(Scene(newforest, parallel = true))
+render(Mesh(newforest, parallel = true))
 #=
 
-# Customizing the scene
+# Customizing the mesh
 
-Here we are going to customize the scene of our simulation by adding a horizontal tile represting soil and
+Here we are going to customize the mesh of our simulation by adding a horizontal tile represting soil and
 tweaking the 3D representation. When we want to combine plants generated from graphs with any other
-geometric element it is best to combine all these geometries in a `GLScene` object. We can start the scene
+geometric element it is best to combine all these geometries in a `GLScene` object. We can start the mesh
 with the `newforest` generated in the above:
 
 =#
-scene = Scene(newforest);
+mesh = Mesh(newforest);
 #=
 
 We can create the soil tile directly, without having to create a graph. The simplest approach is two use
@@ -273,29 +273,29 @@ rotatey!(soil, pi/2)
 VirtualPlantLab.translate!(soil, Vec(0.0, 10.5, 0.0))
 #=
 
-We can now add the `soil` to the `scene` object with the `add!` function.
+We can now add the `soil` to the `mesh` object with the `add!` function.
 
 =#
-VirtualPlantLab.add!(scene, mesh = soil, colors = RGB(1,1,0))
+VirtualPlantLab.add!(mesh, soil, colors = RGB(1,1,0))
 #=
 
-We can now render the scene that combines the random forest of binary trees and a yellow soil. Notice that
+We can now render the mesh that combines the random forest of binary trees and a yellow soil. Notice that
 in all previous figures, a coordinate system with grids was being depicted. This is helpful for debugging
-your code but also to help setup the scene (e.g. if you are not sure how big the soil tile should be).
+your code but also to help setup the mesh (e.g. if you are not sure how big the soil tile should be).
 Howver, it may be distracting for the visualization. It turns out that we can turn that off with
 `show_axes = false`:
 
 =#
-render(scene, axes = false)
+render(mesh, axes = false)
 #=
 
-We may also want to save a screenshot of the scene. For this, we need to store the output of the `render` function.
-We can then resize the window rendering the scene, move around, zoom, etc. When we have a perspective that we like,
+We may also want to save a screenshot of the mesh. For this, we need to store the output of the `render` function.
+We can then resize the window rendering the mesh, move around, zoom, etc. When we have a perspective that we like,
 we can run the `save_scene` function on the object returned from `render`. The argument `resolution` can be adjusted in both
 `render` to increase the number of pixels in the final image. A helper function `calculate_resolution` is provided to
 compute the resolution from a physical width and height in cm and a dpi (e.g., useful for publications and posters):
 
 =#
 res = calculate_resolution(width = 16.0, height = 16.0, dpi = 1_000)
-output = render(scene, axes = false, size = res)
+output = render(mesh, axes = false, size = res)
 export_scene(scene = output, filename = "nice_trees.png")
