@@ -1,23 +1,21 @@
-# VirtualPLantLab v0.0.2 release notes
+# VirtualPLantLab v0.0.7 release notes
 
-There is no official release for VirtualPlantLab 0.0.1, so the changes below are relative to
-the (unregistered) VPL.jl.
+Changes in this version:
 
-## Changes to API
+- A new `Mesh` object is defined that contains any number of user defined properties per
+triangle. To access `colors` or `materials` one should do `properties(mesh)[:colors]` or
+`properties(mesh)[:materials]` respectively. Note that the assignmet of colors and materials
+through turtle constructors maintains the same API.
 
-- All exported functions that are not associated to a data type use `snake_case` style,
-unless one of the words has a single letter. For example, `loadmesh` becomes `load_mesh` but
-`nvertices` remains the same in the API. Similarly, `isRoot` becomes `is_root`. Most of
-these changes affect the graph-related and rendering API. Functions associated to datatypes
-(i.e., constructors) use `CamelCase` but that was already the case (e.g., `SolidCube!` or
-`Scene`) so no changes there!.
+- No `Scene` object exists anymore, a mesh contains all the information needed. The `Scene`
+constructors are now replaced by `Mesh` constructors (i.e., replace `Scene()` with `Mesh()`).
 
-- The function `feed!` now belongs to PlantGeomTurtle, so to define methods for `feed!` you
-should now use `PlantGeomTurtle.feed!` instead of `VPL.Geom.feed!`.
+- The function `add!` has a sligthly different API, check the documentation and examples.
 
-- The functions `render` and `draw` (and their mutating `!` versions) no longer have a `backend`
-argument to set the graphics backend. Instead, the user should import `GLMakie` (for native
-backend), `WGLMakie` (for web backend) or `CairoMakie` (for Cairo backend) before any call
-to `render` or `draw`. Note that these packages are not installed when installing
-VirtualPlantLab.jl, so the user may need to install them. Check the new version of the
-tutorials for more information.
+- One can add properties individually to a mesh using the `add_property!` function. This is
+  required when meshes are constructed first and then added to a turtle or existing meshes.
+  Check the API documentation for details of this function.
+
+- Calls to `geoms()` should also be replaced with `Mesh()`
+
+- When merging multiple meshes you need to ensure that they all have the same properties.
