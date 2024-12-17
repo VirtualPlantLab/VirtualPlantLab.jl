@@ -206,14 +206,14 @@ end
 
 As growth is now dependent on intercepted PAR via RUE, we now need to simulate
 light interception by the trees. We will use a ray-tracing approach to do so.
-The first step is to create a scene with the trees and the light sources. As for
-rendering, the scene can be created from the `forest` object by simply calling
-`Scene(forest)` that will generate the 3D meshes and connect them to their
+The first step is to create a mesh with the trees and the light sources. As for
+rendering, the mesh can be created from the `forest` object by simply calling
+`Mesh(forest)` that will generate the 3D meshes and connect them to their
 optical properties.
 
 However, we also want to add the soil surface as this will affect the light
-distribution within the scene due to reflection from the soil surface. This is
-similar to the customized scene that we created before for rendering, but now
+distribution within the mesh due to reflection from the soil surface. This is
+similar to the customized mesh that we created before for rendering, but now
 for the light simulation.
 
 =#
@@ -225,17 +225,17 @@ function create_soil()
 end
 function create_scene(forest)
     # These are the trees
-    scene = Scene(vec(forest))
+    mesh = Mesh(vec(forest))
     # Add a soil surface
     soil = create_soil()
     soil_material = Lambertian(τ = 0.0, ρ = 0.21)
-    add!(scene, mesh = soil, materials = soil_material)
-    # Return the scene
-    return scene
+    add!(mesh, soil, materials = soil_material)
+    # Return the mesh
+    return mesh
 end
 #=
 
-Given the scene, we can create the light sources that can approximate the solar
+Given the mesh, we can create the light sources that can approximate the solar
 irradiance on a given day, location and time of the day using the functions from
 the  package (see package documentation for details). Given the latitude,
 day of year and fraction of the day (`f = 0` being sunrise and `f = 1` being sunset),
@@ -243,11 +243,11 @@ the function `clear_sky()` computes the direct and diffuse solar radiation assum
 a clear sky. These values may be converted to different wavebands and units using
 `waveband_conversion()`. Finally, the collection of light sources approximating
 the solar irradiance distribution over the sky hemisphere is constructed with the
-function `sky()` (this last step requires the 3D scene as input in order to place
+function `sky()` (this last step requires the 3D mesh as input in order to place
 the light sources adequately).
 
 =#
-function create_sky(;scene, lat = 52.0*π/180.0, DOY = 182)
+function create_sky(;mesh, lat = 52.0*π/180.0, DOY = 182)
     # Fraction of the day and day length
     fs = collect(0.1:0.1:0.9)
     dec = declination(DOY)
@@ -264,7 +264,7 @@ function create_sky(;scene, lat = 52.0*π/180.0, DOY = 182)
     Idir_PAR = f_dir.*Idir
     Idif_PAR = f_dif.*Idif
     # Create the dome of diffuse light
-    dome = sky(scene,
+    dome = sky(mesh,
                   Idir = 0.0, ## No direct solar radiation
                   Idif = sum(Idir_PAR)/10*DL, ## Daily Diffuse solar radiation
                   nrays_dif = 1_000_000, ## Total number of rays for diffuse solar radiation
@@ -274,20 +274,20 @@ function create_sky(;scene, lat = 52.0*π/180.0, DOY = 182)
                   nphi = 12) ## Number of discretization steps in the azimuth angle
     # Add direct sources for different times of the day
     for I in Idir_PAR
-        push!(dome, sky(scene, Idir = I/10*DL, nrays_dir = 100_000, Idif = 0.0)[1])
+        push!(dome, sky(mesh, Idir = I/10*DL, nrays_dir = 100_000, Idif = 0.0)[1])
     end
     return dome
 end
 #=
 
-The 3D scene and the light sources are then combined into a `RayTracer` object,
+The 3D mesh and the light sources are then combined into a `RayTracer` object,
 together with general settings for the ray tracing simulation chosen via `RTSettings()`.
 The most important settings refer to the Russian roulette system and the grid
 cloner (see section on Ray Tracing for details). The settings for the Russian
 roulette system include the number of times a ray will be traced
 deterministically (`maxiter`) and the probability that a ray that exceeds `maxiter`
 is terminated (`pkill`). The grid cloner is used to approximate an infinite canopy
-by replicating the scene in the different directions (`nx` and `ny` being the
+by replicating the mesh in the different directions (`nx` and `ny` being the
 number of replicates in each direction along the x and y axes, respectively). It
 is also possible to turn on parallelization of the ray tracing simulation by
 setting `parallel = true` (currently this uses Julia's builtin multithreading
@@ -296,26 +296,26 @@ capabilities).
 In addition `RTSettings()`, an acceleration structure and a splitting rule can
 be defined when creating the `RayTracer` object (see ray tracing documentation
 for details). The acceleration structure allows speeding up the ray tracing
-by avoiding testing all rays against all objects in the scene.
+by avoiding testing all rays against all objects in the mesh.
 
 =#
-function create_raytracer(scene, sources)
+function create_raytracer(mesh, sources)
     settings = RTSettings(pkill = 0.9, maxiter = 4, nx = 5, ny = 5, parallel = true)
-    RayTracer(scene, sources, settings = settings, acceleration = BVH,
+    RayTracer(mesh, sources, settings = settings, acceleration = BVH,
                      rule = SAH{3}(5, 10));
 end
 #=
 
 The actual ray tracing simulation is performed by calling the `trace!()` method
 on the ray tracing object. This will trace all rays from all light sources and
-update the radiant power absorbed by the different surfaces in the scene inside
+update the radiant power absorbed by the different surfaces in the mesh inside
 the `Material` objects (see `feed!()` above):
 
 =#
 function run_raytracer!(forest; DOY = 182)
-    scene   = create_scene(forest)
-    sources = create_sky(scene = scene, DOY = DOY)
-    rtobj   = create_raytracer(scene, sources)
+    mesh   = create_scene(forest)
+    sources = create_sky(mesh = mesh, DOY = DOY)
+    rtobj   = create_raytracer(mesh, sources)
     trace!(rtobj)
     return nothing
 end
@@ -544,8 +544,8 @@ end
 
 As in the previous example, it makes sense to visualize the forest with a soil
 tile beneath it. Unlike in the previous example, we will construct the soil tile
-using a dedicated graph and generate a `Scene` object which can later be
-merged with the rest of scene generated in daily step:
+using a dedicated graph and generate a `Mesh` object which can later be
+merged with the rest of mesh generated in daily step:
 
 =#
 Base.@kwdef struct Soil <: VirtualPlantLab.Node
@@ -553,23 +553,24 @@ Base.@kwdef struct Soil <: VirtualPlantLab.Node
     width::Float64
 end
 function VirtualPlantLab.feed!(turtle::Turtle, s::Soil, data)
-    Rectangle!(turtle, length = s.length, width = s.width, colors = RGB(255/255, 236/255, 179/255))
+    Rectangle!(turtle, length = s.length, width = s.width, colors = RGB(255/255, 236/255, 179/255),
+               materials = Lambertian(τ = 0.0, ρ = 0.21))
 end
 soil_graph = RA(-90.0) + T(Vec(0.0, 10.0, 0.0)) + ## Moves into position
              Soil(length = 20.0, width = 20.0) ## Draws the soil tile
-soil = Scene(Graph(axiom = soil_graph));
+soil = Mesh(Graph(axiom = soil_graph));
 render(soil, axes = false)
 #=
 
-And the following function renders the entire scene (notice that we need to
-use `display()` to force the rendering of the scene when called within a loop
+And the following function renders the entire mesh (notice that we need to
+use `display()` to force the rendering of the mesh when called within a loop
 or a function):
 
 =#
 function render_forest(forest, soil)
-    scene = Scene(vec(forest)) ## create scene from forest
-    scene = Scene([scene, soil]) ## merges the two scenes
-    render(scene)
+    mesh = Mesh(vec(forest)) ## create mesh from forest
+    mesh = Mesh([mesh, soil]) ## merges the two scenes
+    render(mesh)
 end
 #=
 

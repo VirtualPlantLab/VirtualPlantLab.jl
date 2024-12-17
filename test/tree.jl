@@ -186,11 +186,11 @@ newtree = simulate(tree, getInternode, 2)
 The binary tree after two iterations has two branches, as expected:
 
 =#
-render(Scene(newtree))
+render(Mesh(newtree))
 #=
 
 Notice how the lengths of the prisms representing internodes decreases as the branching order increases, as the internodes are younger (i.e. were generated fewer generations ago). Further steps will generate a structure that is more tree-like.
 
 =#
 newtree = simulate(newtree, getInternode, 15)
-render(Scene(newtree))
+render(Mesh(newtree))

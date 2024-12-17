@@ -11,7 +11,7 @@ Centre for Crop Systems Analysis - Wageningen University
 > - Growth rules, based on information stored in organs (dimensions, carbon assimilation)
 > - Update dimensions in function of assimilation
 > - Compute sink strength
-> - Merge Scenes
+> - Merge meshes
 > - Generate forest on grid and retrieve canopy-level data (e.g., LAI)
 >
 
@@ -395,8 +395,8 @@ end
 
 As in the previous example, it makes sense to visualize the forest with a soil
 tile beneath it. Unlike in the previous example, we will construct the soil tile
-using a dedicated graph and generate a `Scene` object which can later be
-merged with the rest of scene generated in daily step:
+using a dedicated graph and generate a `Mesh` object which can later be
+merged with the rest of mesh generated in daily step:
 
 =#
 Base.@kwdef struct Soil <: VirtualPlantLab.Node
@@ -408,19 +408,19 @@ function VirtualPlantLab.feed!(turtle::Turtle, s::Soil, vars)
 end
 soil_graph = RA(-90.0) + T(Vec(0.0, 10.0, 0.0)) + ## Moves into position
              Soil(length = 20.0, width = 20.0) ## Draws the soil tile
-soil = Scene(Graph(axiom = soil_graph));
+soil = Mesh(Graph(axiom = soil_graph));
 render(soil, axes = false)
 #=
 
-And the following function renders the entire scene (notice that we need to
-use `display()` to force the rendering of the scene when called within a loop
+And the following function renders the entire mesh (notice that we need to
+use `display()` to force the rendering of the mesh when called within a loop
 or a function):
 
 =#
 function render_forest(forest, soil)
-    scene = Scene(vec(forest)) ## create scene from forest
-    scene = Scene([scene, soil]) ## merges the two scenes
-    render(scene)
+    mesh = Mesh(vec(forest)) ## create mesh from forest
+    mesh = Mesh([mesh, soil]) ## merges the two scenes
+    render(mesh)
 end
 #=
 
