@@ -299,10 +299,9 @@ for details). The acceleration structure allows speeding up the ray tracing
 by avoiding testing all rays against all objects in the mesh.
 
 =#
-function create_raytracer(mesh, sources)
+function create_raytracer(acc_mesh, sources)
     settings = RTSettings(pkill = 0.9, maxiter = 4, nx = 5, ny = 5, parallel = true)
-    RayTracer(mesh, sources, settings = settings, acceleration = BVH,
-                     rule = SAH{3}(5, 10));
+    RayTracer(acc_mesh, sources, settings = settings);
 end
 #=
 
@@ -314,8 +313,9 @@ the `Material` objects (see `feed!()` above):
 =#
 function run_raytracer!(forest; DOY = 182)
     mesh   = create_scene(forest)
-    sources = create_sky(mesh = mesh, DOY = DOY)
-    rtobj   = create_raytracer(mesh, sources)
+    acc_mesh = accelerate(mesh, acceleration = BVH, rule = SAH{3}(5, 10))
+    sources = create_sky(mesh = acc_mesh, DOY = DOY)
+    rtobj   = create_raytracer(acc_mesh, sources)
     trace!(rtobj)
     return nothing
 end
