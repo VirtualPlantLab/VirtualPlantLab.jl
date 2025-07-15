@@ -1,7 +1,7 @@
 name = "VirtualPlantLab"
 uuid = "b977ecfa-1b9a-418d-909d-4ebe565736ce"
 authors = ["Alejandro Morales Sierra <alejandro.moralessierra@wur.nl> and contributors"]
-version = "0.0.7"
+version = "0.1.0"
 
 [deps]
 PlantGeomPrimitives = "7eef3cc5-4580-4ff0-8f6f-933507db6664"
@@ -13,11 +13,11 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SkyDomes = "1838625c-7cf7-40c6-898b-904883e4b556"
 
 [compat]
-PlantGeomPrimitives = "0.0.5"
-PlantGeomTurtle = "0.0.6"
-PlantGraphs = "0.0.3"
-PlantRayTracer = " 0.0.8"
-PlantViz = "0.0.8"
+PlantGeomPrimitives = "0.1.0"
+PlantGeomTurtle = "0.1.0"
+PlantGraphs = "0.1.0"
+PlantRayTracer = " 0.1.0"
+PlantViz = "0.1.0"
 Reexport = "1.2.2"
-SkyDomes = "0.1.8"
+SkyDomes = "0.1.9"
 julia = "1.11"
