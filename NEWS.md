@@ -1,3 +1,7 @@
+# VirtualPLantLab v0.1.0 release notes
+
+No changes (other than version number) since v0.0.7, see below.
+
 # VirtualPLantLab v0.0.7 release notes
 
 Changes in this version:
