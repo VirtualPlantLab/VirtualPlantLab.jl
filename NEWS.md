@@ -1,3 +1,7 @@
+# VirtualPLantLab v0.1.1 release notes
+
+Update dependencies and ensure it works on Julia 1.12
+
 # VirtualPLantLab v0.1.0 release notes
 
 No changes (other than version number) since v0.0.7, see below.
