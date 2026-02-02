@@ -1,6 +1,6 @@
 name = "VirtualPlantLab"
 uuid = "b977ecfa-1b9a-418d-909d-4ebe565736ce"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Alejandro Morales Sierra <alejandro.moralessierra@wur.nl> and contributors"]
 
 [deps]
