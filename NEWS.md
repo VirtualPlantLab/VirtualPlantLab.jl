@@ -2,6 +2,23 @@
 
 Fixed test dependencies.
 
+# VirtualPLantLab v0.2.0 release notes
+
+We have added the capability to simulate:
+
+- Rows of plants that are not oriented North-South: `α` keyword argument
+  (azimuth of the X axis, default `π`).
+- Terrain with a slope and orientation: `alpha_soil` (slope
+  inclination, default `0`) and `beta_soil` (azimuth of slope normal, default `π`).
+
+A how to guide is added to the website explaining how to use the new feature as well as a
+technical note with all the details regarding geomery. The user will mainly have to modify
+the call to `sky()` from SkyDomes.jl to account for the changes.
+
+These are not breaking changes as the defaults represent the original situation (so no
+need to change code). However, Julia does treat any minor version below 1.0.0 as a breaking
+change so you may need to update your `[compat]` section.
+
 # VirtualPLantLab v0.1.1 release notes
 
 Update dependencies and ensure it works on Julia 1.12
