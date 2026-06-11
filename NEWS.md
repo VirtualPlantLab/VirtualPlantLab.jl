@@ -1,6 +1,24 @@
-# VirtualPLantLab v0.1.2 release notes
+# VirtualPLantLab v1.0.0 release notes
 
-Fixed test dependencies.
+All packages in the VPLCore plus SkyDomes are in version 1.0.0. This is done for technical
+reasons to facilitate further development of VPL and to signal that the tools are already
+being used as part of research projects across the world.
+
+## Breaking changes in SkyDomes
+
+All public API functions now express angles in degrees instead of
+radians (both inputs and outputs). The internal calculations remain in radians.
+
+The affected functions and their angle arguments/outputs are:
+
+* `sky`: inputs `theta_dir`, `phi_dir`, `α`, `alpha_soil`, and `beta_soil` now in degrees.
+  Default values updated accordingly (`α = 180.0`, `beta_soil = 180.0`).
+* `clear_sky`: input `lat` and outputs `theta` and `phi` now in degrees.
+* `daily_radiation`: input `lat` now in degrees.
+* `cloudy_sky`: input `lat` and outputs `theta` and `phi` now in degrees.
+* `CIE`: inputs `θₛ` and `Φₛ` now in degrees.
+* `declination`: return value now in degrees (was radians).
+* `day_length`: inputs `lat` and `dec` now in degrees.
 
 # VirtualPLantLab v0.2.0 release notes
 
@@ -18,6 +36,10 @@ the call to `sky()` from SkyDomes.jl to account for the changes.
 These are not breaking changes as the defaults represent the original situation (so no
 need to change code). However, Julia does treat any minor version below 1.0.0 as a breaking
 change so you may need to update your `[compat]` section.
+
+# VirtualPLantLab v0.1.2 release notes
+
+Fixed test dependencies.
 
 # VirtualPLantLab v0.1.1 release notes
 
