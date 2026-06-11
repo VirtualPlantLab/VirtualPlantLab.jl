@@ -1,3 +1,16 @@
+# VirtualPLantLab v1.0.1 release notes
+
+All packages in the VPLCore plus SkyDomes are in version 1.0.1. This completes the migration
+of angles and trigonometry to work exclusively on hexadecimal degree.
+
+## Breaking changes in PlantGeomPrimitives, PlantRayTracer, PlantViz and SkyDomes
+
+This means that all functions that take an angle as input or return an angle as output (from
+VPLCore packages plus SkyDomes) will now only work with angles in hexadecimal degrees, never
+radians.
+
+The changes also affect internal functions that you may be relying on.
+
 # VirtualPLantLab v1.0.0 release notes
 
 All packages in the VPLCore plus SkyDomes are in version 1.0.0. This is done for technical
