@@ -1,3 +1,9 @@
+# VirtualPLantLab v1.0.2 release notes
+
+It is now possible to create ellipsoids (both directly and via the turtle). Note that, unlike
+other primitives, the argument `n` does not specify the number of triangles but rather 
+`ntriangles = 2n(n - 1)` (see documentation of `Ellipsoid` for details).
+
 # VirtualPLantLab v1.0.1 release notes
 
 All packages in the VPLCore plus SkyDomes are in version 1.0.1. This completes the migration
