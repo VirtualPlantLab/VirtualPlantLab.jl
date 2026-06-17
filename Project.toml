@@ -13,7 +13,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 PlantGeomPrimitives = "1.0.3"
-PlantGeomTurtle = "1.0.2"
+PlantGeomTurtle = "1.0.1"
 PlantGraphs = "1.0.0"
 PlantRayTracer = " 1.0.1"
 PlantViz = "1.0.1"
